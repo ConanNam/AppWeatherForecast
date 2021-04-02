@@ -19,6 +19,7 @@ import {
 import axios from 'axios';
 import Geolocation from '@react-native-community/geolocation';
 import Icon from 'react-native-vector-icons/AntDesign';
+import Icon2 from 'react-native-vector-icons/MaterialIcons';
 
 const openWeatherKey = `50e84571dbe337604074ef3e73cfa370`;
 const openWeatherKey2 = `d2307b5cea109f1be2239d2588f020a0`;
@@ -42,6 +43,7 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     marginLeft: 4,
     color: 'white',
+    padding: 5,
   },
   container: {
     flex: 1,
@@ -109,41 +111,40 @@ const styles = StyleSheet.create({
   },
 });
 
-const getFirtNameCity = (lat, lon) => {
-  if (lat !== undefined && lon !== undefined) {
-    axios({
-      method: 'GET',
-      url: `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${openWeatherKey2}&lang=vi`,
-    })
-      .then(Response => {
-        return Response.data['name'];
-      })
-      .catch(Error => {
-        // Alert.alert('Lỗi', [
-        //   {
-        //     text: 'OK',
-        //     onPress: () => console.log('Cancel Pressed'),
-        //     style: 'cancel',
-        //   },
-        // ]);
-      });
-  }
-};
+// const getFirtNameCity = (lat, lon) => {
+//   if (lat !== undefined && lon !== undefined) {
+//     axios({
+//       method: 'GET',
+//       url: `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${openWeatherKey2}&lang=vi`,
+//     })
+//       .then(Response => {
+//         return Response.data['name'];
+//       })
+//       .catch(Error => {
+//         // Alert.alert('Lỗi', [
+//         //   {
+//         //     text: 'OK',
+//         //     onPress: () => console.log('Cancel Pressed'),
+//         //     style: 'cancel',
+//         //   },
+//         // ]);
+//       });
+//   }
+// };
 
 const formatSrt = str => {
   let desc = str[0].toUpperCase() + str.substring(1, 100);
   return desc;
 };
 
-const Home = ({navigation}) => {
+const Home = ({navigation, route}) => {
   const [search, setSearch] = useState(null);
   const [lat, setLat] = useState();
   const [lon, setLon] = useState();
-  const [city, setCity] = useState(() => {
-    getFirtNameCity(lat, lon);
-  });
+  const [city, setCity] = useState('search');
   const [forecast, setForecast] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+
   useEffect(async () => {
     try {
       const granted = await PermissionsAndroid.request(
@@ -175,7 +176,13 @@ const Home = ({navigation}) => {
       console.warn(err);
     }
   }, []);
-  console.log('lat: ' + lat + ' ' + 'lon: ' + lon);
+
+  useEffect(() => {
+    if (route.params?.s) {
+      setSearch(route.params?.s);
+    }
+  }, [route.params?.s]);
+
   useEffect(() => {
     loadForecast();
   }, [lat, lon]);
@@ -208,7 +215,7 @@ const Home = ({navigation}) => {
     if (response.ok) {
       setForecast(data);
     } else {
-      if (city !== null) {
+      if (city === null) {
         Alert.alert('Lỗi', 'Không tìm thấy địa điểm', [
           {
             text: 'OK',
@@ -247,35 +254,34 @@ const Home = ({navigation}) => {
           style={{
             padding: 10,
             borderRadius: 20,
-            borderColor: 'white',
-            borderWidth: 0.5,
             height: 50,
-            width: '80%',
+            width: '100%',
+            marginLeft: 10,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
           }}>
-          <TextInput
-            placeholder={city}
-            placeholderTextColor="white"
-            onChangeText={val => {
-              setSearch(val);
-            }}
+          <Icon2 name="place" size={30} color="white" />
+          <Text
             style={{
               paddingVertical: 0,
               color: 'white',
-              fontSize: 25,
+              fontSize: 22,
               textAlign: 'center',
+            }}>
+            {city}
+          </Text>
+          <TouchableOpacity
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginLeft: 10,
+              height: 40,
+              width: 40,
             }}
-          />
+            onPress={() => navigation.navigate('Search')}>
+            <Icon name="search1" size={30} color="white" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginLeft: 10,
-            height: 40,
-            width: 40,
-          }}>
-          <Icon name="search1" size={30} color="white" />
-        </TouchableOpacity>
       </View>
       <ScrollView
         refreshControl={
@@ -439,14 +445,10 @@ const Home = ({navigation}) => {
                   hourlyData: forecast,
                 });
               }}>
-              <Text
-                style={{
-                  color: 'yellow',
-                  textDecorationLine: 'underline',
-                  fontSize: 20,
-                }}>
-                More...
-              </Text>
+              <Image
+                source={require('./assets/more.png')}
+                style={{width: 30, height: 30, marginRight: 10}}
+              />
             </TouchableOpacity>
           </View>
           <FlatList
@@ -496,14 +498,10 @@ const Home = ({navigation}) => {
                   dailyData: forecast,
                 })
               }>
-              <Text
-                style={{
-                  color: 'yellow',
-                  textDecorationLine: 'underline',
-                  fontSize: 20,
-                }}>
-                More...
-              </Text>
+              <Image
+                source={require('./assets/more.png')}
+                style={{width: 30, height: 30, marginRight: 10}}
+              />
             </TouchableOpacity>
           </View>
           {forecast.daily.slice(0, 7).map(d => {

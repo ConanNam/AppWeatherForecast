@@ -26,7 +26,6 @@ const styles = StyleSheet.create({
 const WeatherHourly = ({navigation, route}) => {
   let forcast = route.params.hourlyData;
   let hourly = forcast.hourly;
-  console.log(hourly);
   return (
     <ImageBackground
       style={styles.container}

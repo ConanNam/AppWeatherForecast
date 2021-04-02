@@ -33,7 +33,6 @@ const styles = StyleSheet.create({
 const WeatherDaily = ({navigation, route}) => {
   let forcast = route.params.dailyData;
   let daily = forcast.daily;
-  console.log(daily);
   return (
     <ImageBackground
       style={styles.container}
@@ -61,7 +60,7 @@ const WeatherDaily = ({navigation, route}) => {
         renderItem={daily => {
           const weather = daily.item.weather[0];
           var dt = new Date(daily.item.dt * 1000);
-          console.log(`dt`, dt);
+
           let dew_point = daily.item.dew_point;
           let min = daily.item.temp.min;
           let max = daily.item.temp.max;
@@ -71,11 +70,7 @@ const WeatherDaily = ({navigation, route}) => {
           let wind_speed = daily.item.wind_speed;
           let sunrise = new Date(daily.item.sunrise * 1000);
           let sunset = new Date(daily.item.sunset * 1000);
-          console.log(dt.toLocaleDateString());
-          console.log(
-            `new Date(daily.item.sunrise * 1000)`,
-            new Date(daily.item.sunrise * 1000).toLocaleDateString(),
-          );
+
           return (
             <View>
               <View
