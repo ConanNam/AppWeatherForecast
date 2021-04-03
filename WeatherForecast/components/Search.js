@@ -29,7 +29,7 @@ const Search = ({navigation, route}) => {
 
   useEffect(() => {
     temp = cities.filter(item => {
-      return item.name.includes(tempSreach.toLowerCase());
+      return item.name.toLowerCase().includes(tempSreach.toLowerCase());
     });
     console.log(`tempSearch: ` + tempSreach);
     console.log(temp.length);
@@ -81,7 +81,7 @@ const Search = ({navigation, route}) => {
           keyExtractor={(item, index) => index.toString()}
           renderItem={city => {
             return (
-              <View>
+              <View style={{marginBottom: 10}}>
                 <TouchableOpacity
                   style={{
                     flexDirection: 'row',

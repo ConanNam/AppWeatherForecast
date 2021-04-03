@@ -111,39 +111,45 @@ const styles = StyleSheet.create({
   },
 });
 
-// const getFirtNameCity = (lat, lon) => {
-//   if (lat !== undefined && lon !== undefined) {
-//     axios({
-//       method: 'GET',
-//       url: `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${openWeatherKey2}&lang=vi`,
-//     })
-//       .then(Response => {
-//         return Response.data['name'];
-//       })
-//       .catch(Error => {
-//         // Alert.alert('Lỗi', [
-//         //   {
-//         //     text: 'OK',
-//         //     onPress: () => console.log('Cancel Pressed'),
-//         //     style: 'cancel',
-//         //   },
-//         // ]);
-//       });
-//   }
-// };
-
 const formatSrt = str => {
   let desc = str[0].toUpperCase() + str.substring(1, 100);
   return desc;
 };
 
+let fLat = 0;
+let fLon = 0;
+
 const Home = ({navigation, route}) => {
   const [search, setSearch] = useState(null);
   const [lat, setLat] = useState();
   const [lon, setLon] = useState();
-  const [city, setCity] = useState('search');
+  const [city, setCity] = useState('Hiện tại');
   const [forecast, setForecast] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  const getFirtNameCity = () => {
+    if (fLat && fLon) {
+      axios({
+        method: 'GET',
+        url: `https://api.openweathermap.org/data/2.5/weather?lat=${fLat}&lon=${fLon}&appid=${openWeatherKey2}&lang=vi`,
+      })
+        .then(Response => {
+          if (Response.data) {
+            console.log(`Response.data.name`, Response.data.name);
+            setCity(Response.data.name);
+          }
+        })
+        .catch(Error => {
+          // Alert.alert('Lỗi', [
+          //   {
+          //     text: 'OK',
+          //     onPress: () => console.log('Cancel Pressed'),
+          //     style: 'cancel',
+          //   },
+          // ]);
+        });
+    }
+  };
 
   useEffect(async () => {
     try {
@@ -158,6 +164,9 @@ const Home = ({navigation, route}) => {
         Geolocation.getCurrentPosition(
           info => {
             let location = info.coords;
+
+            fLat = location.latitude;
+            fLon = location.longitude;
             setLat(location.latitude);
             setLon(location.longitude);
           },
@@ -177,6 +186,12 @@ const Home = ({navigation, route}) => {
     }
   }, []);
 
+  console.log('flat: ' + fLat + ' ' + 'fLon: ' + fLon);
+
+  useEffect(() => {
+    getFirtNameCity();
+  }, [fLat, fLon]);
+
   useEffect(() => {
     if (route.params?.s) {
       setSearch(route.params?.s);
@@ -186,6 +201,9 @@ const Home = ({navigation, route}) => {
   useEffect(() => {
     loadForecast();
   }, [lat, lon]);
+
+  console.log('lat: ' + lat + ' ' + 'lon: ' + lon);
+  console.log(`city`, city);
 
   useEffect(() => {
     if (search !== null) {
