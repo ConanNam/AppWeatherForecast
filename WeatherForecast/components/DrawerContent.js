@@ -34,7 +34,6 @@ const DrawerContent = ({props, navigation}) => {
     toggleSwitchKmh,
     toggleSwitchMbar,
     toggleSwitchKm,
-    handleSearch,
   } = useContext(DataContext);
   return (
     <ImageBackground
@@ -69,7 +68,7 @@ const DrawerContent = ({props, navigation}) => {
               }}>
               History
             </Text>
-            <FlatList
+            {/* <FlatList
               data={locate}
               keyExtractor={(item, index) => index.toString()}
               renderItem={lc => {
@@ -91,7 +90,26 @@ const DrawerContent = ({props, navigation}) => {
                   </View>
                 );
               }}
-            />
+            /> */}
+            {locate.map((lc, index) => {
+              return (
+                <View key={index}>
+                  <TouchableOpacity
+                    style={{flexDirection: 'row', marginTop: 20}}
+                    onPress={() => {
+                      navigation.navigate('Home', {
+                        s: lc,
+                      });
+                    }}>
+                    <IconFe name="map-pin" size={22} color="white" />
+                    <Text
+                      style={{fontSize: 16, color: 'white', marginLeft: 10}}>
+                      {lc}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
           </View>
           <Text
             style={{
