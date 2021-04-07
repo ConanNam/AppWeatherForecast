@@ -8,7 +8,8 @@
 import React, {useState, useEffect} from 'react';
 import {StatusBar, StyleSheet, View} from 'react-native';
 import SplashScreen from './components/SplashScreen';
-import StackNavigation from './components/StackNavigation';
+import Navigation from './components/Navigation';
+import DataContextProvider from './components/context/DataContext';
 const App = () => {
   const [splash, setSplash] = useState(true);
   useEffect(() => {
@@ -22,7 +23,9 @@ const App = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
-      <StackNavigation />
+      <DataContextProvider>
+        <Navigation />
+      </DataContextProvider>
     </View>
   );
 };

@@ -1,4 +1,5 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
+import {DataContext} from '../components/context/DataContext';
 import {
   View,
   Text,
@@ -26,13 +27,13 @@ let temp = null;
 var value = null;
 const Search = ({navigation, route}) => {
   const [tempSreach, setTempSearch] = useState('');
+  const {handleSearch} = useContext(DataContext);
 
   useEffect(() => {
     temp = cities.filter(item => {
       return item.name.toLowerCase().includes(tempSreach.toLowerCase());
     });
     console.log(`tempSearch: ` + tempSreach);
-    console.log(temp.length);
   }, [tempSreach]);
   return (
     <ImageBackground
@@ -56,6 +57,7 @@ const Search = ({navigation, route}) => {
           <Icon name="arrow-back-ios" color="white" size={30} />
         </TouchableOpacity>
         <TextInput
+          autoFocus={true}
           placeholder="Tìm kiếm"
           placeholderTextColor="white"
           style={{fontSize: 25, color: 'white', marginRight: 30, width: '70%'}}
@@ -67,9 +69,8 @@ const Search = ({navigation, route}) => {
           onPress={() => {
             value = tempSreach;
             if (value !== null) {
-              navigation.navigate('Home', {
-                s: value,
-              });
+              handleSearch(value);
+              navigation.navigate('Home');
             }
           }}>
           <Icon2 name="search1" size={30} color="white" />
@@ -90,9 +91,8 @@ const Search = ({navigation, route}) => {
                   }}
                   onPress={() => {
                     temp = null;
-                    navigation.navigate('Home', {
-                      s: city.item.name,
-                    });
+                    handleSearch(city.item.name);
+                    navigation.navigate('Home');
                   }}>
                   <Icon name="place" size={22} color="white" />
                   <Text style={{fontSize: 22, color: 'white', marginLeft: 10}}>

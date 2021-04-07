@@ -1,4 +1,5 @@
-import React from 'react';
+import React, {useContext} from 'react';
+import {DataContext} from '../components/context/DataContext';
 import {
   View,
   Text,
@@ -26,6 +27,7 @@ const styles = StyleSheet.create({
 const WeatherHourly = ({navigation, route}) => {
   let forcast = route.params.hourlyData;
   let hourly = forcast.hourly;
+  const {C, kmh, mbar, km} = useContext(DataContext);
   return (
     <ImageBackground
       style={styles.container}
@@ -88,22 +90,46 @@ const WeatherHourly = ({navigation, route}) => {
                 <View>
                   <Text style={styles.text}>Điểm sương: {dew_point}</Text>
                   <Text style={styles.text}>Độ ẩm: {humidity}%</Text>
-                  <Text style={styles.text}>Tốc độ gió: {wind_speed} m/s</Text>
                   <Text style={styles.text}>
-                    Tầm nhìn: {visibility / 1000} km
+                    Tốc độ gió:
+                    {kmh === true ? (
+                      <Text>{Math.round(wind_speed * 3.6)} km/h</Text>
+                    ) : (
+                      <Text>{wind_speed} m/s</Text>
+                    )}
+                  </Text>
+                  <Text style={styles.text}>
+                    Tầm nhìn:
+                    {km === true ? (
+                      <Text>{visibility / 1000} km</Text>
+                    ) : (
+                      <Text>{visibility} m</Text>
+                    )}
                   </Text>
                   <Text style={styles.text}>Chỉ số UV: {uvi}</Text>
-                  <Text style={styles.text}>Áp suất: {pressure} mb</Text>
+                  <Text style={styles.text}>
+                    Áp suất:
+                    {mbar === true ? (
+                      <Text>{pressure / 1000} b</Text>
+                    ) : (
+                      <Text>{pressure} mb</Text>
+                    )}
+                  </Text>
                 </View>
                 <View style={{justifyContent: 'center', alignItems: 'center'}}>
                   <Image
-                    style={{width: 100, height: 100}}
                     source={{
                       uri: `https://openweathermap.org/img/wn/${weather.icon}@4x.png`,
+                      width: 100,
+                      height: 100,
                     }}
                   />
                   <Text style={{color: 'white', fontSize: 25}}>
-                    {Math.round(hour.item.temp)}°C
+                    {C === true ? (
+                      <Text>{Math.round(hour.item.temp * 1.8 + 32)}°F</Text>
+                    ) : (
+                      <Text>{Math.round(hour.item.temp)}°C</Text>
+                    )}
                   </Text>
                 </View>
               </View>

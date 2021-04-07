@@ -1,4 +1,5 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
+import {DataContext} from '../components/context/DataContext';
 import {
   StyleSheet,
   Text,
@@ -24,7 +25,7 @@ import Icon2 from 'react-native-vector-icons/MaterialIcons';
 const openWeatherKey = `50e84571dbe337604074ef3e73cfa370`;
 const openWeatherKey2 = `d2307b5cea109f1be2239d2588f020a0`;
 let url = `https://api.openweathermap.org/data/2.5/onecall?&units=metric&exclude=minutely&appid=${openWeatherKey}&lang=vi`;
-
+let locationArr = [];
 const options = {
   weekday: 'long',
   year: 'numeric',
@@ -121,9 +122,9 @@ let fLon = 0;
 
 const Home = ({navigation, route}) => {
   const [search, setSearch] = useState(null);
-  const [lat, setLat] = useState();
-  const [lon, setLon] = useState();
-  const [city, setCity] = useState('Hiện tại');
+  const [lat, setLat] = useState(null);
+  const [lon, setLon] = useState(null);
+  const [city, setCity] = useState(null);
   const [forecast, setForecast] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -150,6 +151,21 @@ const Home = ({navigation, route}) => {
         });
     }
   };
+
+  const {C, kmh, mbar, km, s, handleLocate} = useContext(DataContext);
+
+  console.log(C);
+  console.log('drawerContent' + route.params?.s);
+
+  useEffect(() => {
+    if (route.params?.s) {
+      setSearch(route.params?.s);
+    }
+  }, [route.params?.s]);
+
+  useEffect(() => {
+    setSearch(s);
+  }, [s]);
 
   useEffect(async () => {
     try {
@@ -186,42 +202,40 @@ const Home = ({navigation, route}) => {
     }
   }, []);
 
-  console.log('flat: ' + fLat + ' ' + 'fLon: ' + fLon);
-
   useEffect(() => {
     getFirtNameCity();
   }, [fLat, fLon]);
 
   useEffect(() => {
-    if (route.params?.s) {
-      setSearch(route.params?.s);
+    if (lat && lon) {
+      loadForecast();
     }
-  }, [route.params?.s]);
-
-  useEffect(() => {
-    loadForecast();
   }, [lat, lon]);
 
-  console.log('lat: ' + lat + ' ' + 'lon: ' + lon);
   console.log(`city`, city);
 
   useEffect(() => {
-    if (search !== null) {
+    if (search) {
       axios({
         method: 'GET',
         url: `https://api.openweathermap.org/data/2.5/weather?q=${search}&appid=${openWeatherKey2}&lang=vi`,
       })
         .then(Response => {
-          console.log(
-            Response.data['coord'].lat + ' ' + Response.data['coord'].lon,
-          );
-
+          if (!locationArr.includes(Response.data['name'])) {
+            locationArr.push(Response.data['name']);
+            handleLocate(locationArr);
+          }
           setLat(Response.data['coord'].lat);
           setLon(Response.data['coord'].lon);
           setCity(Response.data['name']);
         })
         .catch(Error => {
-          console.log(Error);
+          Alert.alert('Lỗi', 'Không tìm thấy địa điểm', [
+            {
+              text: 'Ok',
+              onPress: () => console.log('Cancel ok'),
+            },
+          ]);
         });
     }
   }, [search]);
@@ -233,15 +247,14 @@ const Home = ({navigation, route}) => {
     if (response.ok) {
       setForecast(data);
     } else {
-      if (city === null) {
-        Alert.alert('Lỗi', 'Không tìm thấy địa điểm', [
-          {
-            text: 'OK',
-            onPress: () => console.log('Cancel Pressed'),
-            style: 'cancel',
-          },
-        ]);
-      }
+      console.log('error');
+      // Alert.alert('Lỗi', 'Không tìm thấy địa điểm', [
+      //   {
+      //     text: 'OK',
+      //     onPress: () => console.log('Cancel Pressed'),
+      //     style: 'cancel',
+      //   },
+      // ]);
     }
     setRefreshing(false);
   };
@@ -278,7 +291,12 @@ const Home = ({navigation, route}) => {
             flexDirection: 'row',
             justifyContent: 'space-between',
           }}>
-          <Icon2 name="place" size={30} color="white" />
+          <TouchableOpacity
+            onPress={() => {
+              navigation.openDrawer();
+            }}>
+            <Icon2 name="menu" size={30} color="white" />
+          </TouchableOpacity>
           <Text
             style={{
               paddingVertical: 0,
@@ -320,17 +338,32 @@ const Home = ({navigation, route}) => {
           }}>
           <View style={styles.current}>
             <Image
-              style={styles.largeIcon}
+              //style={styles.largeIcon}
               source={{
                 uri: `https://openweathermap.org/img/wn/${current.icon}@4x.png`,
+                width: 200,
+                height: 200,
               }}
             />
             <View>
               <Text style={styles.currentTemp}>
-                {Math.round(forecast.current.temp)}°C
+                {C === true ? (
+                  <Text>{Math.round(forecast.current.temp * 1.8 + 32)}°F</Text>
+                ) : (
+                  <Text>{Math.round(forecast.current.temp)}°C</Text>
+                )}
               </Text>
               <Text style={{fontSize: 15, color: 'white'}}>
-                Cảm giác như: {Math.round(forecast.current.feels_like)}°C
+                {C === true ? (
+                  <Text>
+                    Cảm giác như:{' '}
+                    {Math.round(forecast.current.feels_like * 1.8 + 32)}°F
+                  </Text>
+                ) : (
+                  <Text>
+                    Cảm giác như: {Math.round(forecast.current.feels_like)}°C
+                  </Text>
+                )}
               </Text>
             </View>
           </View>
@@ -370,7 +403,7 @@ const Home = ({navigation, route}) => {
                 style={{width: 40, height: 40, margin: 10}}
               />
               <Text style={{fontSize: 20, color: 'white'}}>
-                {forecast.current.dew_point}°C
+                {forecast.current.dew_point}
               </Text>
               <Text style={{fontSize: 18, color: 'white', textAlign: 'center'}}>
                 Điểm sương
@@ -382,7 +415,13 @@ const Home = ({navigation, route}) => {
                 style={{width: 40, height: 40, margin: 10}}
               />
               <Text style={{fontSize: 20, color: 'white'}}>
-                {forecast.current.wind_speed} m/s
+                {kmh === true ? (
+                  <Text>
+                    {Math.round(forecast.current.wind_speed * 3.6)} km/h
+                  </Text>
+                ) : (
+                  <Text>{forecast.current.wind_speed} m/s</Text>
+                )}
               </Text>
               <Text style={{fontSize: 18, color: 'white', textAlign: 'center'}}>
                 Tốc độ gió
@@ -409,7 +448,11 @@ const Home = ({navigation, route}) => {
                 style={{width: 40, height: 40, margin: 10}}
               />
               <Text style={{fontSize: 20, color: 'white'}}>
-                {forecast.current.visibility / 1000} km
+                {km === true ? (
+                  <Text>{forecast.current.visibility / 1000} km</Text>
+                ) : (
+                  <Text>{forecast.current.visibility} m</Text>
+                )}
               </Text>
               <Text style={{fontSize: 18, color: 'white', textAlign: 'center'}}>
                 Tầm nhìn
@@ -433,7 +476,11 @@ const Home = ({navigation, route}) => {
                 style={{width: 40, height: 40, margin: 10}}
               />
               <Text style={{fontSize: 20, color: 'white'}}>
-                {forecast.current.pressure} mb
+                {mbar === true ? (
+                  <Text>{forecast.current.pressure / 1000} b</Text>
+                ) : (
+                  <Text>{forecast.current.pressure} mb</Text>
+                )}
               </Text>
               <Text style={{fontSize: 18, color: 'white', textAlign: 'center'}}>
                 Sức ép
@@ -485,12 +532,18 @@ const Home = ({navigation, route}) => {
                     {dt.toLocaleTimeString().replace(/:\d+ /, ' ')}
                   </Text>
                   <Text style={{color: 'white'}}>
-                    {Math.round(hour.item.temp)}°C
+                    {C === true ? (
+                      <Text>{Math.round(hour.item.temp * 1.8 + 32)}°F</Text>
+                    ) : (
+                      <Text>{Math.round(hour.item.temp)}°C</Text>
+                    )}
                   </Text>
                   <Image
-                    style={styles.smallIcon}
+                    //style={styles.smallIcon}
                     source={{
                       uri: `https://openweathermap.org/img/wn/${weather.icon}@4x.png`,
+                      width: 100,
+                      height: 100,
                     }}
                   />
                   <Text style={{color: 'white'}}>{desc}</Text>
@@ -531,11 +584,19 @@ const Home = ({navigation, route}) => {
               weather.description.substring(1, 100);
             return (
               <View style={styles.day} key={d.dt}>
-                <Text style={styles.dayTemp}>{Math.round(d.temp.max)}°C</Text>
+                <Text style={styles.dayTemp}>
+                  {C === true ? (
+                    <Text>{Math.round(d.temp.max * 1.8 + 32)}°F</Text>
+                  ) : (
+                    <Text>{Math.round(d.temp.max)}°C</Text>
+                  )}
+                </Text>
                 <Image
-                  style={styles.smallIcon}
+                  //style={styles.smallIcon}
                   source={{
                     uri: `https://openweathermap.org/img/wn/${weather.icon}@4x.png`,
+                    width: 100,
+                    height: 100,
                   }}
                 />
                 <View style={styles.dayDetails}>
