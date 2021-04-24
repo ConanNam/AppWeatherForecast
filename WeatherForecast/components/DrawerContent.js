@@ -68,29 +68,6 @@ const DrawerContent = ({props, navigation}) => {
               }}>
               History
             </Text>
-            {/* <FlatList
-              data={locate}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={lc => {
-                return (
-                  <View>
-                    <TouchableOpacity
-                      style={{flexDirection: 'row', marginTop: 20}}
-                      onPress={() => {
-                        navigation.navigate('Home', {
-                          s: lc.item,
-                        });
-                      }}>
-                      <IconFe name="map-pin" size={22} color="white" />
-                      <Text
-                        style={{fontSize: 16, color: 'white', marginLeft: 10}}>
-                        {lc.item}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              }}
-            /> */}
             {locate.map((lc, index) => {
               return (
                 <View key={index}>

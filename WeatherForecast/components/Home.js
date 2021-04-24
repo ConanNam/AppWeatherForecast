@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 24,
     marginVertical: 12,
-    marginLeft: 4,
+    marginLeft: 20,
     color: 'white',
     padding: 5,
   },
@@ -83,6 +83,7 @@ const styles = StyleSheet.create({
   },
   day: {
     flexDirection: 'row',
+    marginLeft: 20,
   },
   dayDetails: {
     justifyContent: 'center',
@@ -122,17 +123,16 @@ let fLon = 0;
 
 const Home = ({navigation, route}) => {
   const [search, setSearch] = useState(null);
-  const [lat, setLat] = useState(null);
-  const [lon, setLon] = useState(null);
+  const [dataLocation, setDataLocation] = useState({});
   const [city, setCity] = useState(null);
   const [forecast, setForecast] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const getFirtNameCity = () => {
-    if (fLat && fLon) {
+    if (dataLocation.lat && dataLocation.lon) {
       axios({
         method: 'GET',
-        url: `https://api.openweathermap.org/data/2.5/weather?lat=${fLat}&lon=${fLon}&appid=${openWeatherKey2}&lang=vi`,
+        url: `https://api.openweathermap.org/data/2.5/weather?lat=${dataLocation.lat}&lon=${dataLocation.lon}&appid=${openWeatherKey2}&lang=vi`,
       })
         .then(Response => {
           if (Response.data) {
@@ -167,50 +167,27 @@ const Home = ({navigation, route}) => {
     setSearch(s);
   }, [s]);
 
-  useEffect(async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Location Permission',
-          message: 'MyMapApp needs access to your location',
-        },
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        Geolocation.getCurrentPosition(
-          info => {
-            let location = info.coords;
-
-            fLat = location.latitude;
-            fLon = location.longitude;
-            setLat(location.latitude);
-            setLon(location.longitude);
-          },
-          error => console.log(error),
-          {
-            enableHighAccuracy: true,
-            timeout: 2000,
-            maximumAge: 3600000,
-          },
-        );
-        console.log('Location permission granted');
-      } else {
-        console.log('Location permission denied');
-      }
-    } catch (err) {
-      console.warn(err);
-    }
+  useEffect(() => {
+    Geolocation.getCurrentPosition(
+      info => {
+        let location = info.coords;
+        setDataLocation({lat: location.latitude, lon: location.longitude});
+      },
+      error => console.log(error),
+    );
   }, []);
 
   useEffect(() => {
-    getFirtNameCity();
-  }, [fLat, fLon]);
+    if (dataLocation.lat !== null && dataLocation.lon !== null) {
+      getFirtNameCity();
+    }
+  }, [dataLocation.lat, dataLocation.lon]);
 
   useEffect(() => {
-    if (lat && lon) {
+    if (dataLocation.lat !== null && dataLocation.lon) {
       loadForecast();
     }
-  }, [lat, lon]);
+  }, [dataLocation.lat, dataLocation.lon]);
 
   console.log(`city`, city);
 
@@ -225,8 +202,11 @@ const Home = ({navigation, route}) => {
             locationArr.push(Response.data['name']);
             handleLocate(locationArr);
           }
-          setLat(Response.data['coord'].lat);
-          setLon(Response.data['coord'].lon);
+
+          setDataLocation({
+            lat: Response.data['coord'].lat,
+            lon: Response.data['coord'].lon,
+          });
           setCity(Response.data['name']);
         })
         .catch(Error => {
@@ -242,19 +222,14 @@ const Home = ({navigation, route}) => {
 
   const loadForecast = async () => {
     setRefreshing(true);
-    const response = await fetch(`${url}&lat=${lat}&lon=${lon}`);
+    const response = await fetch(
+      `${url}&lat=${dataLocation.lat}&lon=${dataLocation.lon}`,
+    );
     const data = await response.json();
     if (response.ok) {
       setForecast(data);
     } else {
       console.log('error');
-      // Alert.alert('Lỗi', 'Không tìm thấy địa điểm', [
-      //   {
-      //     text: 'OK',
-      //     onPress: () => console.log('Cancel Pressed'),
-      //     style: 'cancel',
-      //   },
-      // ]);
     }
     setRefreshing(false);
   };
@@ -323,7 +298,17 @@ const Home = ({navigation, route}) => {
         refreshControl={
           <RefreshControl
             onRefresh={() => {
-              loadForecast();
+              Geolocation.getCurrentPosition(
+                info => {
+                  let location = info.coords;
+                  setDataLocation({
+                    lat: location.latitude,
+                    lon: location.longitude,
+                  });
+                },
+                error => console.log(error),
+              );
+              //loadForecast();
             }}
             refreshing={refreshing}
           />
